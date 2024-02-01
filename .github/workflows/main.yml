@@ -1,0 +1,29 @@
+name: Build Kernel and Upload Artifacts
+
+on:
+  push:
+    branches:
+      - uno
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
+          mkdir clang-aosp
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android14-release/clang-r487747c.tar.gz
+          tar -C clang-aosp/ -zxvf clang-r487747c.tar.gz
+
+      - name: Build Kernel
+        run: |
+          export PATH=$GITHUB_WORKSPACE/clang-aosp/bin:$PATH
+          make ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu CLANG_TRIPLE=aarch64-linux-gnu CROSS_COMPILE_COMPAT=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1 O=out TARGET_PRODUCT=umi vendor/kona-perf_defconfig vendor/xiaomi/sm8250-common.config vendor/xiaomi/umi.config
+          make ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu CLANG_TRIPLE=aarch64-linux-gnu CROSS_COMPILE_COMPAT=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1 O=out TARGET_PRODUCT=umi
