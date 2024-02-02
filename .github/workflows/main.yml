@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - uno
+  workflow_run:
+    workflows: [Update KernelSU]
+    types:
+      - completed
 
 jobs:
   build:
